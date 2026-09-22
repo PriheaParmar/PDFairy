@@ -26,13 +26,18 @@ def main():
     expect_400("/api/convert", [("a.txt", b"one", "text/plain"), ("b.txt", b"two", "text/plain")], {"format": "pdf"}, "exactly one")
     expect_400("/api/convert", [("binary.txt", b"\0\xff", "text/plain")], {"format": "pdf"}, "plain-text")
     expect_400("/api/compress", [("one.pdf", PDF1, "application/pdf")], {"target_bytes": "abc"}, "Target size")
+    expect_400("/api/compress", [("one.pdf", PDF1, "application/pdf")], {"quality": "wild"}, "Compression level")
+    expect_400("/api/split", [("one.pdf", PDF1, "application/pdf")], {"mode": "extract", "pages": "4-2"}, "descending page range")
+    expect_400("/api/split", [("one.pdf", PDF1, "application/pdf")], {"mode": "extract", "pages": "99"}, "between 1 and 2")
     expect_400("/api/sign", [("one.pdf", PDF1, "application/pdf")], {"signature": "Priya", "page": "abc", "position": "bottom-right"}, "Page number")
     expect_400("/api/sign", [("one.pdf", PDF1, "application/pdf")], {"signature": "Priya", "page": "1", "position": "wherever"}, "valid signature position")
     bad_edit = json.dumps([{ "type":"delete_everything", "page":0, "x":.5, "y":.5 }])
     expect_400("/api/edit", [("one.pdf", PDF1, "application/pdf")], {"operations": bad_edit}, "text, sign or redact")
     bad_page = json.dumps([{ "type":"text", "page":-1, "x":.5, "y":.5, "text":"No" }])
     expect_400("/api/edit", [("one.pdf", PDF1, "application/pdf")], {"operations": bad_page}, "outside this PDF")
-    print("7/7 QA regression checks passed")
+    _, headers = post("/api/convert", [("résumé.txt", b"hello", "text/plain")], {"format": "pdf"})
+    assert headers["X-Output-Name-Encoded"].startswith("r%C3%A9sum%C3%A9"), headers
+    print("11/11 QA regression checks passed")
 
 
 if __name__ == "__main__":

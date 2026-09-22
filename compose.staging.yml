@@ -1,0 +1,46 @@
+services:
+  pdfairy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pdfairy:staging
+    container_name: pdfairy-staging
+    init: true
+    restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    user: "10001:10001"
+    ports:
+      - "127.0.0.1:${PDFAIRY_STAGING_PORT:-8081}:8080"
+    environment:
+      PDFAIRY_HOST: "0.0.0.0"
+      PDFAIRY_PORT: "8080"
+      PDFAIRY_ENV: "staging"
+      PDFAIRY_PUBLIC_URL: "${PDFAIRY_PUBLIC_URL:?Set the real staging HTTPS origin}"
+      PDFAIRY_ALLOWED_ORIGINS: "${PDFAIRY_ALLOWED_ORIGINS:-}"
+      PDFAIRY_TRUSTED_PROXIES: "${PDFAIRY_TRUSTED_PROXIES:?Set exact reverse-proxy peer IPs}"
+      PDFAIRY_MAX_FILE_MB: "${PDFAIRY_MAX_FILE_MB:-50}"
+      PDFAIRY_MAX_BODY_MB: "${PDFAIRY_MAX_BODY_MB:-80}"
+      PDFAIRY_MAX_OUTPUT_MB: "${PDFAIRY_MAX_OUTPUT_MB:-100}"
+      PDFAIRY_MAX_FILES: "${PDFAIRY_MAX_FILES:-20}"
+      PDFAIRY_MAX_PAGES: "${PDFAIRY_MAX_PAGES:-100}"
+      PDFAIRY_MAX_CONCURRENT: "${PDFAIRY_MAX_CONCURRENT:-2}"
+      PDFAIRY_REQUEST_TIMEOUT: "${PDFAIRY_REQUEST_TIMEOUT:-120}"
+      PDFAIRY_OFFICE_TIMEOUT: "${PDFAIRY_OFFICE_TIMEOUT:-90}"
+      PDFAIRY_ENABLE_OFFICE: "false"
+      PDFAIRY_TEMP_DIR: "/tmp/pdfairy"
+      PDFAIRY_LOG_REQUESTS: "true"
+    tmpfs:
+      - /tmp/pdfairy:rw,noexec,nosuid,nodev,size=268435456,uid=10001,gid=10001,mode=0700
+    mem_limit: 1g
+    cpus: 1.0
+    pids_limit: 64
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health',timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3

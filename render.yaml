@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: pdfairy-staging
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PDFAIRY_HOST
+        value: 0.0.0.0
+      - key: PDFAIRY_ENV
+        value: staging
+      - key: PDFAIRY_ENABLE_OFFICE
+        value: "false"
+      - key: PDFAIRY_PROXY_MODE
+        value: render
+      - key: PDFAIRY_MAX_FILE_MB
+        value: "50"
+      - key: PDFAIRY_MAX_BODY_MB
+        value: "80"
+      - key: PDFAIRY_MAX_OUTPUT_MB
+        value: "100"
+      - key: PDFAIRY_MAX_FILES
+        value: "20"
+      - key: PDFAIRY_MAX_PAGES
+        value: "100"
+      - key: PDFAIRY_MAX_CONCURRENT
+        value: "1"
+      - key: PDFAIRY_REQUEST_TIMEOUT
+        value: "120"
+      - key: PDFAIRY_TEMP_DIR
+        value: /tmp/pdfairy
+      - key: PDFAIRY_LOG_REQUESTS
+        value: "true"

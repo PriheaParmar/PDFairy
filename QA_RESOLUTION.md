@@ -29,7 +29,10 @@ This build was rebuilt from the 5 September 2026 QA report. The original was a s
 
 - JavaScript syntax check: passed
 - Python syntax check: passed
-- API/output integration tests: 15/15 passed
-- Output verification includes PDF signatures/page counts, DOCX ZIP structure, split ZIP contents, persisted PDF text/signatures, editor export and invalid-PDF rejection.
-
-Browser screenshot-based cross-browser and visual regression testing still requires browsers on the target QA machine. It was not possible in the supplied environment, so it is not falsely marked as complete.
+- API/output integration tests: 14/14 passed (the optional LibreOffice check runs when LibreOffice is installed)
+- QA regression checks: 11/11 passed
+- Production hardening checks: 16/16 passed
+- Output verification includes PDF signatures/page counts, DOCX ZIP structure, split ZIP contents, persisted PDF text/signatures, editor export, encrypted/corrupt-file rejection, page limits, upload-count limits, origin checks, static-file isolation and stale temporary-folder cleanup.
+- Full interactive workflow verification: Chromium-based in-app browser.
+- Static render verification: installed Google Chrome and Microsoft Edge.
+- Firefox and Safari/WebKit were not available in this Windows environment and are not claimed as verified.
