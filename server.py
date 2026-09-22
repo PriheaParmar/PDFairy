@@ -498,6 +498,8 @@ class Handler(SimpleHTTPRequestHandler):
         return False
 
     def end_headers(self):
+        if self.close_connection:
+            self.send_header("Connection", "close")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Referrer-Policy", "no-referrer")
         self.send_header("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
@@ -585,9 +587,11 @@ class Handler(SimpleHTTPRequestHandler):
         self.send_text(content.encode("utf-8"), "application/xml; charset=utf-8", head_only=head_only)
 
     def do_OPTIONS(self):
+        self.close_connection = True
         self.send_json({"error": "Cross-origin requests are not enabled."}, 405)
 
     def _method_not_allowed(self):
+        self.close_connection = True
         self.send_json({"error": "This HTTP method is not supported."}, 405)
 
     do_PUT = _method_not_allowed
@@ -607,11 +611,13 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         started = time.monotonic()
+        body_consumed = False
         self._request_id = uuid.uuid4().hex
         self._response_status = 500
         file_count = total_bytes = 0
         error_category = "none"
         if not self.work_slots.acquire(blocking=False):
+            self.close_connection = True
             self.send_json({"error": "PDFairy is busy. Wait a moment and try again."}, 503)
             log_event("request", request_id=self._request_id, endpoint=urlparse(self.path).path, status=503,
                       duration_ms=round((time.monotonic() - started) * 1000), file_count=0,
@@ -629,7 +635,9 @@ class Handler(SimpleHTTPRequestHandler):
             content_type = self.headers.get("Content-Type", "")
             if "multipart/form-data" not in content_type:
                 raise UserError("Expected a multipart file upload.")
-            form = parse_multipart(content_type, self.rfile.read(length))
+            body = self.rfile.read(length)
+            body_consumed = True
+            form = parse_multipart(content_type, body)
             uploads = form.get("files", [])
             uploads = uploads if isinstance(uploads, list) else [uploads]
             file_count = sum(isinstance(item, Upload) for item in uploads)
@@ -657,6 +665,8 @@ class Handler(SimpleHTTPRequestHandler):
             self.log_error("processing error (%s)", type(exc).__name__)
             self.send_json({"error": "The file could not be processed. It may be damaged or unsupported."}, 422)
         finally:
+            if not body_consumed:
+                self.close_connection = True
             self.work_slots.release()
             log_event(
                 "request", request_id=self._request_id, endpoint=urlparse(self.path).path,

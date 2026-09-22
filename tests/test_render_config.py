@@ -41,6 +41,20 @@ def request(port, path="/", headers=None):
     return result
 
 
+def keepalive_recovery(port):
+    connection = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+    connection.request("PUT", "/api/health", body=b"x")
+    response = connection.getresponse()
+    assert response.status == 405
+    response.read()
+    connection.request("POST", "/api/convert", body=b"hello", headers={"Content-Type": "text/plain"})
+    response = connection.getresponse()
+    body = response.read()
+    connection.close()
+    assert response.status == 400
+    assert b"multipart" in body
+
+
 def wait_ready(port, process):
     deadline = time.monotonic() + 15
     while time.monotonic() < deadline:
@@ -104,6 +118,7 @@ def main():
                 "X-Forwarded-Proto": "http", "CF-Ray": "test-ray", "CF-Connecting-IP": "203.0.113.7"
             })[1] else None
         )))
+        checks.append(check("unconsumed request bodies cannot corrupt keep-alive", lambda: keepalive_recovery(port)))
         passed = sum(checks)
         print(f"\n{passed}/{len(checks)} Render configuration checks passed")
         return 0 if passed == len(checks) else 1
