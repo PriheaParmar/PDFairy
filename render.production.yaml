@@ -6,7 +6,6 @@ services:
     branch: codex/production-launch
     autoDeployTrigger: off
     healthCheckPath: /health
-    maxShutdownDelaySeconds: 130
     dockerfilePath: ./Dockerfile
     envVars:
       - key: PDFAIRY_HOST
