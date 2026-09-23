@@ -112,7 +112,9 @@ The reverse proxy must terminate HTTPS and forward to `127.0.0.1:8081`. Replace 
 
 ## Launch checklist
 
-- Set the final HTTPS `PDFAIRY_PUBLIC_URL`, allowed origin, and exact trusted proxy IPs.
+The owner-facing production configuration, monitoring, recovery, Git, and deployment runbook is in [`PRODUCTION.md`](PRODUCTION.md). The separate Render Blueprint is `render.production.yaml`; it does not replace the staging service, uses the owner-approved Free/no-custom-domain configuration, and has automatic deploys disabled.
+
+- Set the final HTTPS `PDFAIRY_PUBLIC_URL` and allowed origin. On Render use `PDFAIRY_PROXY_MODE=render`; on other platforms supply only exact trusted proxy peer IPs.
 - Configure TLS, HTTP-to-HTTPS redirect, body/time/rate limits, container quotas, tmpfs, and restart/monitoring at the hosting layer.
 - Decide whether Office conversion is disabled or deployed in a dedicated isolated worker/container; run a genuine end-to-end conversion there.
 - Supply legal operator, legal address, privacy/contact email, governing jurisdiction, and lawyer-reviewed warranty/liability text.
